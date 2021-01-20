@@ -234,6 +234,18 @@ const Tir = function () {
                     }
                 ]
             })
+            $$.BDNS.addConfig("predefined", {
+                endpoints: [
+                    {
+                        endpoint: `http://localhost:${virtualMQPort}`,
+                        type: 'brickStorage'
+                    },
+                    {
+                        endpoint: `http://localhost:${virtualMQPort}`,
+                        type: 'anchorService'
+                    }
+                ]
+            })
 
             if (Object.keys(domainConfigs).length === 0) { // no domain added
                 prepareTeardownTimeout();
@@ -366,6 +378,15 @@ const Tir = function () {
             process.env[consts.BDNS_ROOT_HOSTS] = nodeUrl;
             const bdns = {
                 "default": {
+                    "replicas": [],
+                    "brickStorages": [
+                        nodeUrl
+                    ],
+                    "anchoringServices": [
+                        nodeUrl
+                    ]
+                },
+                "predefined": {
                     "replicas": [],
                     "brickStorages": [
                         nodeUrl
