@@ -32,7 +32,11 @@ module.exports.fork = function pingPongFork(modulePath, args, options){
     return child;
 };
 
-module.exports.enableLifeLine = function(timeout){
+module.exports.enableLifeLine = function(timeout, options) {
+    if (typeof timeout === 'object' && typeof options === 'undefined') {
+        options = timeout;
+        timeout = options.timeout;
+    }
 
     if(typeof process.send === "undefined"){
         console.log("\"process.send\" not found. LifeLine mechanism disabled!");
@@ -67,7 +71,7 @@ module.exports.enableLifeLine = function(timeout){
         }, 0);
     }
 
-    const exceptionEvents = ["SIGINT", "SIGUSR1", "SIGUSR2", "uncaughtException", "SIGTERM", "SIGHUP"];
+    const exceptionEvents = options.handleExceptionEvents || ["SIGINT", "SIGUSR1", "SIGUSR2", "uncaughtException", "SIGTERM", "SIGHUP"];
     let killingSignal = false;
     for(let i=0; i<exceptionEvents.length; i++){
         process.on(exceptionEvents[i], (event, code)=>{

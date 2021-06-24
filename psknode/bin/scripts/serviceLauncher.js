@@ -40,7 +40,7 @@ const restartDelays = {};
 
 const pingFork = require("../../core/utils/pingpongFork").fork;
 
-let shouldRestart = true;
+const shouldRestart = true;
 const forkedProcesses = {};
 
 function startProcess(filePath,  args, options) {
@@ -59,7 +59,6 @@ function startProcess(filePath,  args, options) {
     }
 
     function errorHandler(filePath) {
-        let timeout = 100;
         return function (error) {
             console.log(`\x1b[31mException caught on spawning file ${filePath} `, error ? error : "", "\x1b[0m"); //last string is to reset terminal colours
             if (shouldRestart) {
@@ -69,9 +68,17 @@ function startProcess(filePath,  args, options) {
     }
 
     function exitHandler(filePath) {
-        return function () {
+        return function (code) {
+            const isApiLauncherService = filePath.indexOf('pskApiHubLauncher') !== -1;
+            let shouldRestartProcess = shouldRestart;
+
+            // The ApiHub service should restart only if exit code == 2 (port is already in use)
+            if (isApiLauncherService && code !== 2) {
+                shouldRestartProcess = false;
+            }
+
             console.log(`\x1b[33mExit caught on spawned file ${filePath}`, "\x1b[0m"); //last string is to reset terminal colours
-            if (shouldRestart) {
+            if (shouldRestartProcess) {
                 restartWithDelay(filePath);
             }
         }
