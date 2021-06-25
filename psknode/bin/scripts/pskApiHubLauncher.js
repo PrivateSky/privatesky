@@ -43,22 +43,29 @@ function startServer() {
     });
 }
 
-// If the apihub port is already in use, exit with exit code 2
-// so that the service launcher will restart the process.
-// For other kind of exception use exit code 1 so that the
-// service launcher won't restart the process
+let retryTimeout = 100;
+function retry() {
+    setTimeout(() => {
+        retryTimeout = (retryTimeout * 2) % (10 * 60 * 1000);
+        startServer();
+    }, retryTimeout);
+}
+
+// If the apihub port is already in use, retry starting the server
+// For other kind of exceptions exit with code 1
 process.on('uncaughtException', (e) => {
     // Handle `throw null` && `throw undefined`
     if (typeof e !== 'object' || !e) {
         e = new Error(e);
     }
 
-    let exitCode = 1;
     if (e.code === 'EADDRINUSE') {
-        exitCode = 2;
+        console.log(`Port not available. Retrying in ${retryTimeout / 1000}s`);
+        return retry();
     }
-    console.log(`Unhandled exception:`, e);
-    process.exit(exitCode);
+
+    console.log(`Uncaught exception`, e);
+    process.exit(1);
 })
 
 startServer();
